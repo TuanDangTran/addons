@@ -5,7 +5,7 @@ class SaleOrder(models.Model):
     _inherit = 'sale.order'
 
     def action_invoice_subscription(self):
-        super(SaleOrder, self.with_context(multiple_draft_invoices=True)).action_invoice_subscription()
+        return super(SaleOrder, self.with_context(multiple_draft_invoices=True)).action_invoice_subscription()
 
     def _create_recurring_invoice(self, automatic=False, batch_size=30):
         if self._context.get('multiple_draft_invoices', None):
