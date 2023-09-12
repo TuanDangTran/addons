@@ -11,7 +11,11 @@ class SaleOrder(models.Model):
     def _create_recurring_invoice(self, automatic=False, batch_size=30):
         order_not_payment_token = []
         order_payment_exception = []
-        for rec in self:
+        search_domain = self._recurring_invoice_domain()
+        order = self
+        if not len(self) and self._context.get('multiple_draft_invoices'):
+            order = self.search(search_domain)
+        for rec in order:
             if not rec.payment_token_id:
                 rec.payment_token_id = rec.create_payment_token().id
                 order_not_payment_token.append(rec)
@@ -67,8 +71,11 @@ class SaleOrder(models.Model):
         return super()._handle_automatic_invoices(auto_commit, invoices)
 
     def _cron_recurring_create_invoice(self):
-        return super(SaleOrder, self.with_context(multiple_draft_invoices=True))._cron_recurring_create_invoice()
-
+        res =  super(SaleOrder, self.with_context(multiple_draft_invoices=True))._cron_recurring_create_invoice()
+        search_domain = self._recurring_invoice_domain()
+        all_subscriptions = self.search(search_domain)
+        all_subscriptions.write({'is_invoice_cron': False})
+        return res
 
 class PaymentToken(models.Model):
     _inherit = 'payment.token'
