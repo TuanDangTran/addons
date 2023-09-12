@@ -7,6 +7,7 @@ class SaleOrder(models.Model):
     def action_invoice_subscription(self):
         return super(SaleOrder, self.with_context(multiple_draft_invoices=True)).action_invoice_subscription()
 
+
     def _create_recurring_invoice(self, automatic=False, batch_size=30):
         order_not_payment_token = []
         order_payment_exception = []
@@ -25,6 +26,7 @@ class SaleOrder(models.Model):
         for order in order_payment_exception:
             order.payment_exception = True
         return result
+
 
     def _create_invoices(self, grouped=False, final=False, date=None):
         move_id_and_type = []
