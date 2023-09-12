@@ -20,7 +20,7 @@ class TestSaleOrder(TestSaleOrderCommon):
             self.Subscriptions.action_invoice_subscription()
         account_move = self.env['account.move'].search([('invoice_line_ids.sale_line_ids.order_id', '=', self.Subscriptions.id)])
         self.assertEqual(lop_number, len(account_move))
-    #
+        
     def test_cron_job_recurring_invoices(self):
         account_move = self.env['account.move'].search(
                     [('invoice_line_ids.sale_line_ids.order_id', '=', self.Subscriptions.id)])
@@ -29,3 +29,4 @@ class TestSaleOrder(TestSaleOrderCommon):
         account_move1 = self.env['account.move'].search(
                     [('invoice_line_ids.sale_line_ids.order_id', '=', self.Subscriptions.id)])
         self.assertEqual(lop_number + len(account_move), len(account_move1))
+
