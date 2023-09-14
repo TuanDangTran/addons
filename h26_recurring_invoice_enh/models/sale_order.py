@@ -12,17 +12,18 @@ class SaleOrder(models.Model):
         return super(SaleOrder, self.with_context(multiple_draft_invoices=True)).action_invoice_subscription()
 
     def _create_recurring_invoice(self, automatic=False, batch_size=30):
-        order_not_payment_token = self.before_create_recurring_invoice()
+        order_not_payment_token = self._get_order_with_payment_info()
         result = super()._create_recurring_invoice(automatic, batch_size)
-        self.after_create_recurring_invoice(order_not_payment_token)
+        if len(order_not_payment_token):
+            self.after_create_recurring_invoice(order_not_payment_token)
         return result
 
-    def before_create_recurring_invoice(self):
+    def _get_order_with_payment_info(self):
         order_not_payment_token = []
-        for rec in self.get_sale_order():
-            if not rec.payment_token_id:
-                rec.payment_token_id = rec.select_payment_token().id
-                order_not_payment_token.append(rec)
+        order_ids = self._get_sale_order_ids()
+        for rec in order_ids.filtered(lambda x: not  x.payment_token_id):
+            rec.payment_token_id = rec._get_payment_token_id().id
+            order_not_payment_token.append(rec)
         return order_not_payment_token
 
     def after_create_recurring_invoice(self, order_not_payment_token):
@@ -31,7 +32,7 @@ class SaleOrder(models.Model):
             if order.payment_token_id.tmp_payment_token:
                 order.payment_token_id.unlink()
 
-    def get_sale_order(self):
+    def _get_sale_order_ids(self):
         if not len(self) and self._context.get('multiple_draft_invoices'):
             search_domain = self._recurring_invoice_domain()
             return self.search(search_domain)
@@ -49,24 +50,22 @@ class SaleOrder(models.Model):
             move_id[0].move_type = move_id[1]
         return res
 
-    def select_payment_token(self):
+    def _get_payment_token_id(self):
         field_name = 'payment_token_id'
         models = self.fields_get([field_name])[field_name].get('relation')
         domain = [('partner_id', 'child_of', self.partner_id.id), ('company_id', '=', self.env.company.id)]
-        payment_token = self.env[models].search(domain, limit=1)
-        if payment_token:
-            return payment_token
-        else:
-            value = self.get_value_payment_token()
-            return self.env[models].create(value)
+        payment_token_id = self.env[models].search(domain, limit=1)
+        if payment_token_id:
+            return payment_token_id
+        return self.env[models].create(self._prepare_payment_token_vals())
 
-    def get_value_payment_token(self):
+    def _prepare_payment_token_vals(self):
         return {
-                'partner_id': self.partner_id.id,
-                'provider_ref': 'tmp payment',
-                'provider_id': self.env['payment.provider'].search([], limit=1).id,
-                'tmp_payment_token': True
-            }
+            'partner_id': self.partner_id.id,
+            'provider_ref': 'tmp payment',
+            'provider_id': self.env['payment.provider'].search([], limit=1).id,
+            'tmp_payment_token': True
+        }
 
     def _get_invoiceable_lines(self, final=False):
         if self._context.get('multiple_draft_invoices', None):
