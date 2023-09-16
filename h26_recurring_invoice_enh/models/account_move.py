@@ -17,3 +17,16 @@ class AccountMove(models.Model):
                 rec.name = '/'
         else:
             super()._compute_name()
+
+    def _post(self, soft=True):
+        subscription_ids = list()
+        invoice_line_ids = self.invoice_line_ids.filtered(lambda x: x.subscription_id)
+        for rec in invoice_line_ids:
+            rec.subscription_id = False
+            subscription_ids.append([rec, rec.subscription_id])
+
+        res =  super()._post(soft=soft)
+
+        for invoice_line in subscription_ids:
+            invoice_line[0].subscription_id = invoice_line[1]
+        return res
