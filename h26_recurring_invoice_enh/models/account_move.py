@@ -19,15 +19,15 @@ class AccountMove(models.Model):
             super()._compute_name()
 
     def _post(self, soft=True):
-        invoice_line_ids = self._update_subscription_id_after_post()
+        mapped_invoice_subscription_data = self._handel_mapped_invoice_subscriptions_data()
         res =  super()._post(soft)
-        for invoice_line in invoice_line_ids:
+        for invoice_line in mapped_invoice_subscription_data:
             invoice_line[0].subscription_id = invoice_line[1]
         return res
 
-    def _update_subscription_id_after_post(self):
-        invoice_line_ids = list()
+    def _handel_mapped_invoice_subscriptions_data(self):
+        mapped_invoice_subscription_data = list()
         for rec in self.invoice_line_ids.filtered(lambda x: x.subscription_id):
-            invoice_line_ids.append([rec, rec.subscription_id])
+            mapped_invoice_subscription_data.append([rec, rec.subscription_id])
             rec.subscription_id = False
-        return invoice_line_ids
+        return mapped_invoice_subscription_data
