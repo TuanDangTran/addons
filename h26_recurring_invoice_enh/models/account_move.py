@@ -22,8 +22,8 @@ class AccountMove(models.Model):
         subscription_ids = list()
         invoice_line_ids = self.invoice_line_ids.filtered(lambda x: x.subscription_id)
         for rec in invoice_line_ids:
-            rec.subscription_id = False
             subscription_ids.append([rec, rec.subscription_id])
+            rec.subscription_id = False
 
         res =  super()._post(soft=soft)
 
