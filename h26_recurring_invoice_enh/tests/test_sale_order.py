@@ -26,6 +26,7 @@ class TestSaleOrder(TestSaleOrderCommon):
         account_move = self.env[model].search(
                     [('invoice_line_ids.sale_line_ids.order_id', '=', self.Subscriptions.id)])
         for i in range(lop_number):
+            self.Subscriptions.next_invoice_date = date.today()
             self.env['sale.order']._cron_recurring_create_invoice()
         account_move1 = self.env[model].search(
                     [('invoice_line_ids.sale_line_ids.order_id', '=', self.Subscriptions.id)])
@@ -53,8 +54,8 @@ class TestSaleOrder(TestSaleOrderCommon):
 
     def test_sub_next_to_invoice(self):
         next_invoice_date = self.Subscriptions.next_invoice_date
-        self.Subscriptions.action_invoice_subscription()
-        self.Subscriptions
-        next_invoice_date2 = self.env['account.move.line'].search([('move_id.invoice_line_ids.sale_line_ids.order_id', '=', self.Subscriptions.id)],
-                                     limit=1).subscription_end_date
-        self.assertEqual(next_invoice_date, next_invoice_date2)
+        for i in range(lop_number):
+            self.Subscriptions.action_invoice_subscription()
+            next_invoice_date2 = self.env['account.move.line'].search([('move_id.invoice_line_ids.sale_line_ids.order_id', '=', self.Subscriptions.id)],order="id asc",
+                                         limit=1).subscription_end_date
+            self.assertEqual(next_invoice_date, next_invoice_date2)
