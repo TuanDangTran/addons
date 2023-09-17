@@ -29,4 +29,5 @@ class AccountMove(models.Model):
 
         for invoice_line in subscription_ids:
             invoice_line[0].subscription_id = invoice_line[1]
+
         return res

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+
 from odoo import models
 from dateutil.relativedelta import relativedelta
+
 
 
 class SaleOrderLine(models.Model):
